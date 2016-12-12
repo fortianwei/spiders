@@ -11,6 +11,15 @@ sql_insert_tag = u'''
 insert into resources_category(RESCATEGORY_NAME,RESCATEGORY_PARENTCATEGORYID) values('{}',{})
 '''
 
+sql_insert_res = u'''
+insert into resources(RES_LOCATION, RES_PACKAGENAME, RES_NAME, RES_ICONS, RES_STATUS, RES_DESCRIPTION,
+RES_FREEPAID,RES_VERSION,RES_DOWNLOADNUM,RES_CAPACITY,RES_DEVELOPER,RES_RATED,
+RES_SCREENSHOTS,RES_TYPE,RES_RANK) select '{location}','{packagename}','{name}','{icon}',1,'{desc}',
+0, '{version}',{downnum},{capacity},'{developer}',{rated},'{screenshots}', {category},0 from dual where not exists(
+select RES_PACKAGENAME from resources where RES_PACKAGENAME='{packagename}'
+))
+'''
+
 
 class WDJ(object):
     def __init__(self):
@@ -19,6 +28,10 @@ class WDJ(object):
                                     user='tianwei', passwd='tianwei', charset='utf8')
         self.conn.autocommit(1)
         self.cursor = self.conn.cursor()
+        self.tag_map = {}
+        self.cursor.execute('select RESCATEGORY_ID,RESCATEGORY_NAME from resources_category where RESCATEGORY_ID>155')
+        for tag in self.cursor.fetchall():
+            self.tag_map[tag[1]] = tag[0]
 
     def get_tag_box(self):
         """
@@ -43,7 +56,7 @@ class WDJ(object):
                         tag_row_id = self.cursor.lastrowid
                         print 'child tag row id ', tag_row_id
 
-    def fetch_info_from_app_detail_url(self, url):
+    def fetch_info_from_app_detail_url(self, tag_name, url):
         resp = requests.get(url)
         soup = bs4.BeautifulSoup(resp.text, 'html.parser')
         # print soup.prettify()
@@ -53,9 +66,11 @@ class WDJ(object):
             icon = detail_wrap.find('img', attrs={'itemprop': 'image'})['src']
             name = detail_wrap.find('span', attrs={'itemprop': 'name'}).string
             screen_all = detail_wrap.findAll('img', attrs={'itemprop': 'screenshot'})
+            screen_shots = ','.join([screen_tag['src'] for screen_tag in screen_all])
             desc_tag = detail_wrap.find('div', attrs={'itemprop': 'description'})
             download_url = detail_wrap.find('div', class_='download-wp').find('a')[
                                'href'] + '?source=wandoujia-web_inner_referral_binded'
+            downnum = detail_wrap.find('i', attrs={'itemprop': 'interactionCount'})['content'][len('UserDownloads:'):]
 
             desc = ''
             for e in desc_tag.recursiveChildGenerator():
@@ -75,13 +90,22 @@ class WDJ(object):
             developer = dds[6].span.string if dds[6].span else dds[6].a.string
             print icon
             print name
-            print screen_all
+            print screen_shots
             print desc
             print publish_date
             print download_url
+            print downnum
             print apk_size
             print version_name
             print developer
+
+            # RES_SCREENSHOTS,RES_TYPE,RES_RANK) values('{location}','{packagename}','{name}','{icon}',1,'{desc}',
+            # 0, '{version}',{downnum},{capacity},'{developer}',{rated},'{screenshots}', {category},{rank})
+            self.cursor.execute(
+                sql_insert_res.format(location=download_url, packagename=url[url.rindex('/'):], name=name,
+                                      icon=icon, desc=desc, version=version_name, downnum=downnum, capacity=apk_size,
+                                      developer=developer, rated=3, screenshots=screen_shots,
+                                      category=self.tag_map[tag_name]))
 
     def get_apk_info(self):
         resp = requests.get(self.base_url)
@@ -109,7 +133,7 @@ class WDJ(object):
                                 for app_h2 in apps_ul.findAll('h2', 'app-title-h2'):
                                     app_detail_url = app_h2.find('a')['href']
                                     print 'app detail url ', app_detail_url
-                                    self.fetch_info_from_app_detail_url(app_detail_url)
+                                    self.fetch_info_from_app_detail_url(child_tag_name, app_detail_url)
 
 
 if __name__ == '__main__':
