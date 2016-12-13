@@ -145,7 +145,7 @@ class WDJ(object):
                                         developer=developer, rated=3, screenshots=screen_shots,
                                         category=self.tag_map[parent_tag_name])
             rows_affected = self.cursor.execute(sql)
-            print 'rows_affected ', rows_affected
+            # print 'rows_affected ', rows_affected
             if rows_affected:
                 res_id = self.cursor.lastrowid
                 self.cursor.execute(
@@ -185,4 +185,6 @@ class WDJ(object):
 
 
 if __name__ == '__main__':
-    WDJ().get_apk_info()
+    wdj = WDJ()
+    wdj.get_tag_box()
+    wdj.get_apk_info()
