@@ -54,6 +54,11 @@ class WDJ(object):
         for t in tag_box:
             if type(t) == Tag:
                 parent_tag = t.find('a', class_='cate-link')['title']
+                self.cursor.execute(
+                    u'select RESCATEGORY_ID from resources_category where RESCATEGORY_NAME="{}"'.format(parent_tag))
+                if self.cursor.fetchone():
+                    print 'tag already fetched, return'
+                    return
                 self.cursor.execute(sql_insert_tag.format(parent_tag, 0))
                 # print 'parent tag ', parent_tag
                 parent_tag_row_id = self.cursor.lastrowid
