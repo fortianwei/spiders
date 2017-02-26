@@ -80,7 +80,7 @@ class LiuLiu(object):
                     print ret
                     if 'msg' not in ret or 'code' not in ret or 'url' not in ret:
                         continue
-                    if ret['msg'] == 'ok' and ret['code'] == 0:
+                    if ret['code'] == 0:
                         real_rar = requests.get(ret['url'])
                         with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(res_id) + '.rar',
                                   "wb") as code:
@@ -90,7 +90,7 @@ class LiuLiu(object):
                         rar_r = requests.get(
                             self.download_url_template.format(res_id=res_id, timestamp=int(time.time() * 1000)))
                         # print rar_r.text
-                        if ret['msg'] == 'ok' and ret['code'] == 0:
+                        if ret['code'] == 0:
                             real_rar = requests.get(ret['url'])
                             with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(
                                     res_id) + '.rar', "wb") as code:
