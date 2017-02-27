@@ -8,7 +8,7 @@ import json
 if __name__ == '__main__':
     download_url_template = 'http://api.3d66.com/gateway.asp?service=ll.user.downres&llid=' \
                             '{res_id}&rtype=0&token=xUxRxHtTx4AVy4bUxE5WyA2&t={timestamp}'
-    with open('urls.text', 'r') as f:
+    with open('urls.txt', 'r') as f:
         urls = f.readlines()
         for url in urls:
             url = url.strip()
