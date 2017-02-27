@@ -74,8 +74,10 @@ class LiuLiu(object):
                         self.check_dir(model_name, detail_type_name)
                         img_r = requests.get(img_url)
                         self.check_dir(model_name + '/' + detail_type_name, res_id)
-
-                        with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '.jpg', "wb") as code:
+                        img_path = model_name + '/' + detail_type_name + '/' + str(res_id) + '.jpg'
+                        if os.path.exists(img_path):
+                            continue
+                        with open(img_path, "wb") as code:
                             code.write(img_r.content)
                         rar_r = requests.get(
                             self.download_url_template.format(res_id=res_id, timestamp=int(time.time() * 1000)))
