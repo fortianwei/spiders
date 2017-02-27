@@ -21,11 +21,12 @@ if __name__ == '__main__':
                 ret = requests.get(download_url)
                 ret_t = json.loads(ret.text)
                 print ret_t
+                os.mkdir(str(res_id))
                 if ret_t['code'] == 0:
                     rar = requests.get(ret_t['url'])
                     with open(file_name, 'wb') as ff:
                         ff.write(rar.content)
-                    os.system('unrar.exe x ' + file_name)
+                    os.system('unrar e ' + file_name + ' ' + str(res_id))
                 else:
                     print 'request for second time'
                     ret = requests.get(download_url)
@@ -34,7 +35,7 @@ if __name__ == '__main__':
                         rar = requests.get(ret_t['url'])
                         with open(file_name, 'wb') as ff:
                             ff.write(rar.content)
-                        os.system('unrar.exe x ' + file_name)
+                        os.system('unrar e ' + file_name + ' ' + str(res_id))
                 print 'download ', url, ' ok'
             except:
                 continue
