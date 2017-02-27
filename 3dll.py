@@ -47,8 +47,11 @@ class LiuLiu(object):
         pagenav = curr_page.find('div', id='softpagenav')
         if pagenav:
             for a in pagenav.find_all('a'):
-                if a.string == u'下一页':
-                    return a['href']
+                try:
+                    if a.string == u'下一页':
+                        return a['href']
+                except:
+                    continue
         return None
 
     def download_one_model_type(self, model_url, model_name):
@@ -57,44 +60,48 @@ class LiuLiu(object):
         s = bs4.BeautifulSoup(r.text, LiuLiu.PARSER)
         next_page = self.get_next_page_url(s)
         for li in s.find_all('div', class_='libox item'):
-            a = li.find('a')
-            if a:
-                model_detail_url = a['href']
-                print model_detail_url
-                res_id = model_detail_url[model_detail_url.rfind('/') + 1: model_detail_url.rfind('.')]
-                img = a.find('img')
-                if img:
-                    print img['data-src'], img['alt']
-                    img_url = img['data-src']
-                    detail_type_name = img['alt']
-                    self.check_dir(model_name, detail_type_name)
-                    img_r = requests.get(img_url)
-                    self.check_dir(model_name + '/' + detail_type_name, res_id)
+            try:
+                a = li.find('a')
+                if a:
+                    model_detail_url = a['href']
+                    print model_detail_url
+                    res_id = model_detail_url[model_detail_url.rfind('/') + 1: model_detail_url.rfind('.')]
+                    img = a.find('img')
+                    if img:
+                        print img['data-src'], img['alt']
+                        img_url = img['data-src']
+                        detail_type_name = img['alt']
+                        self.check_dir(model_name, detail_type_name)
+                        img_r = requests.get(img_url)
+                        self.check_dir(model_name + '/' + detail_type_name, res_id)
 
-                    with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '.jpg', "wb") as code:
-                        code.write(img_r.content)
-                    rar_r = requests.get(
-                        self.download_url_template.format(res_id=res_id, timestamp=int(time.time() * 1000)))
-                    print rar_r.text
-                    ret = json.loads(rar_r.text)
-                    print ret
-                    if 'msg' not in ret or 'code' not in ret or 'url' not in ret:
-                        continue
-                    if ret['code'] == 0:
-                        real_rar = requests.get(ret['url'])
-                        with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(res_id) + '.rar',
-                                  "wb") as code:
-                            code.write(real_rar.content)
-                    else:
-                        print '第二次请求'
+                        with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '.jpg', "wb") as code:
+                            code.write(img_r.content)
                         rar_r = requests.get(
                             self.download_url_template.format(res_id=res_id, timestamp=int(time.time() * 1000)))
-                        # print rar_r.text
+                        print rar_r.text
+                        ret = json.loads(rar_r.text)
+                        print ret
+                        if 'msg' not in ret or 'code' not in ret or 'url' not in ret:
+                            continue
                         if ret['code'] == 0:
                             real_rar = requests.get(ret['url'])
-                            with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(
-                                    res_id) + '.rar', "wb") as code:
+                            with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(res_id) + '.rar',
+                                      "wb") as code:
                                 code.write(real_rar.content)
+                        else:
+                            print '第二次请求'
+                            rar_r = requests.get(
+                                self.download_url_template.format(res_id=res_id, timestamp=int(time.time() * 1000)))
+                            # print rar_r.text
+                            ret = json.loads(rar_r.text)
+                            if ret['code'] == 0:
+                                real_rar = requests.get(ret['url'])
+                                with open(model_name + '/' + detail_type_name + '/' + str(res_id) + '/' + str(
+                                        res_id) + '.rar', "wb") as code:
+                                    code.write(real_rar.content)
+            except:
+                continue
 
         if next_page:
             self.download_one_model_type(next_page, model_name)
@@ -108,3 +115,4 @@ class LiuLiu(object):
 
 if __name__ == '__main__':
     LiuLiu().download()
+
