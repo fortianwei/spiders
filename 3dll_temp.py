@@ -27,6 +27,7 @@ if __name__ == '__main__':
                     with open(file_name, 'wb') as ff:
                         ff.write(rar.content)
                     os.system('unrar e ' + file_name + ' ' + str(res_id))
+                    os.remove(file_name)
                 else:
                     print 'request for second time'
                     ret = requests.get(download_url)
@@ -36,6 +37,7 @@ if __name__ == '__main__':
                         with open(file_name, 'wb') as ff:
                             ff.write(rar.content)
                         os.system('unrar e ' + file_name + ' ' + str(res_id))
+                        os.remove(file_name)
                 print 'download ', url, ' ok'
             except:
                 continue
